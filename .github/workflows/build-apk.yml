@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'ONYX_KERNEL_Source_Project.zip'
+      - 'ONYX_KERNEL_ROHITO...Updated.zip'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -22,29 +22,29 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract Android project
-        run: |
-          mkdir -p source
-          unzip -q ONYX_KERNEL_Source_Project.zip -d source
-          PROJECT_DIR=$(dirname "$(find source -type f \( -name settings.gradle.kts -o -name settings.gradle \) | head -n 1)")
-          if [ -z "$PROJECT_DIR" ] || [ "$PROJECT_DIR" = "source" ]; then
-            echo "Android project folder not found"
-            exit 1
-          fi
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
+      - name: Extract source project
+        run: |
+          mkdir source
+          unzip -q ONYX_KERNEL_ROHITO...Updated.zip -d source
+
       - name: Build APK
-        run: gradle --no-daemon :app:assembleDebug
-        working-directory: ${{ env.PROJECT_DIR }}
+        working-directory: source/ONYX_KERNEL
+        run: gradle --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ONYX-KERNEL-APK
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/*.apk
+          path: source/ONYX_KERNEL/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
